@@ -1,0 +1,18 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug omni-cli",
+      "cargo": { "args": ["build", "--package=omni-cli", "--bin=omni-cli"] },
+      "args": ["hello-world"]
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug omni-service",
+      "cargo": { "args": ["build", "--package=omni-service", "--bin=omni-service"] }
+    }
+  ]
+}

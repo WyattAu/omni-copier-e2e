@@ -1,0 +1,120 @@
+# Estate tier-a gate matrix + house extras (MSRV, contract).
+# The monthly cron catches ecosystem bitrot push/PR never see.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "0 6 1 * *" # monthly bitrot
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    uses: WyattAu/engineering-standards/.github/workflows/rust-kit.yml@e3a75c976fad58db1a68523cb525052cdcd2da0e # main
+    with:
+      tier: a
+      all-features: true
+      loom: true
+      miri: true
+      # ADR-0005: process surfaces (xtask runner, service main) are excluded
+      # from the line gate; the lib surface stays at >=90%.
+      coverage-ignore-regex: xtask/src|omni-service/src/main.rs
+
+  msrv:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      # Dependabot misreads the ref as an action version (1.85→1.120 broke
+      # this job); master + toolchain input is the un-bumpable form.
+      - uses: dtolnay/rust-toolchain@7e38f4b43b4db5c8dd498af069a4f6196df1d067 # master
+        with:
+          toolchain: "1.85.0"
+      - run: cargo check --workspace --all-features --locked
+
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - run: ./scripts/check-contract.sh
+
+  # Loop 1: macOS + Windows legs — the shared gate runs on Linux; these
+  # prove the build+test surface on the other platforms (advisory while
+  # platform-specific findings are triaged).
+  cross-platform:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@89b12181fb390509a0842a86cc55eeb8eb928c1d # stable
+      - run: cargo check --workspace --all-features --locked
+      - run: cargo test --workspace --all-features --locked
+      - uses: dtolnay/rust-toolchain@89b12181fb390509a0842a86cc55eeb8eb928c1d # stable
+      - run: cargo check --workspace --all-features --locked
+      - run: cargo test --workspace --all-features --locked
+      - uses: dtolnay/rust-toolchain@89b12181fb390509a0842a86cc55eeb8eb928c1d # stable
+      - run: cargo check --workspace --all-features --locked
+      - run: cargo test --workspace --all-features --locked
+
+  # Loop 2: performance budget - blocking since it stayed green for a full
+  # loop (LOOP.md graduation policy). Same scripts/ command a developer runs
+  # locally; never a CI-only measurement path.
+  perf:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@89b12181fb390509a0842a86cc55eeb8eb928c1d # stable
+      - run: make bench
+
+  # Loop 3: determinism verification - blocking since it stayed green for a
+  # full loop, and since measurement showed every toolchain in the estate is
+  # byte-reproducible (ADR: determinism verification). Same scripts/ command a
+  # developer runs locally.
+  repro:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@89b12181fb390509a0842a86cc55eeb8eb928c1d # stable
+      - run: make repro
+
+  # Phase 1 of copier adoption (ADR-0001, engineering-standards): copying this
+  # template with default answers must reproduce the tracked content exactly.
+  # Any drift is a template bug — the update channel depends on this invariant.
+  scaffold:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.12"
+      - run: pip install copier
+      - name: byte-identical scaffold check
+        run: |
+          mkdir -p "$RUNNER_TEMP/tracked"
+          git archive HEAD | tar -x -C "$RUNNER_TEMP/tracked" -f -
+          copier copy --defaults "$RUNNER_TEMP/tracked" "$RUNNER_TEMP/sc"
+          diff -r --exclude=.copier-answers.yml --exclude=.git --exclude=copier.yml \
+            "$RUNNER_TEMP/sc" "$RUNNER_TEMP/tracked"

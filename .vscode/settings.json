@@ -1,0 +1,20 @@
+{
+  "rust-analyzer.check.command": "clippy",
+  "rust-analyzer.cargo.allFeatures": true,
+  "rust-analyzer.rustc.source": "discover",
+  "rust-analyzer.linkedProjects": [
+    "Cargo.toml"
+  ],
+  "editor.formatOnSave": true,
+  "workbench.colorTheme": "Shroom Space",
+  "workbench.iconTheme": "vs-seti",
+  "[rust]": {
+    "editor.defaultFormatter": "rust-lang.rust-analyzer"
+  },
+  "files.watcherExclude": {
+    "**/target/**": true
+  },
+  "files.exclude": {
+    "**/target": true
+  }
+}

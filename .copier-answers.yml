@@ -1,0 +1,5 @@
+# Copier answers: this file makes `copier update` work in derived repos.
+# _src_path is where the template lives; everything else is the answers set.
+_answers_version: 1
+_src_path: https://github.com/WyattAu/OmniRust-template
+project_name: omni-project

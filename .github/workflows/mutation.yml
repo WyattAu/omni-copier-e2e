@@ -1,0 +1,30 @@
+# MUTATION.md policy: weekly, informational; graduates to a blocking gate
+# after 4 stable weeks with zero non-equivalent survivors.
+name: mutation
+
+on:
+  schedule:
+    - cron: "0 3 * * 6" # Saturdays 03:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  mutants:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: taiki-e/install-action@f7e5d7c961414b23f5b25b2da9294395d08513ad # v2
+        with:
+          tool: cargo-mutants
+      - run: cargo mutants --all-features -o mutants-out
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        if: always()
+        with:
+          name: mutants-out
+          path: mutants-out/
+

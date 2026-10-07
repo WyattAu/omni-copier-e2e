@@ -1,0 +1,22 @@
+[package]
+name = "omnirust-fuzz"
+description = "cargo-fuzz harnesses for untrusted-input parsers (estate gate: fuzz on every parser)"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+
+[dependencies.omni-core]
+path = "../crates/omni-core"
+
+[[bin]]
+name = "parse_pub_id"
+path = "fuzz_targets/parse_pub_id.rs"
+test = false
+doc = false
+bench = false

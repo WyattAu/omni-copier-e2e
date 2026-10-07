@@ -1,0 +1,33 @@
+# REQ-T-003: both devcontainer flavors must build and stay green.
+name: devcontainer
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - .devcontainer/devcontainer.json
+          - .devcontainer/nix/devcontainer.json
+    # The nix flavor is a blocking gate as of loop 1: the GHCR feature that
+    # used to 401 was replaced by the official installer in
+    # .devcontainer/nix/bootstrap.sh, and both flavors build green.
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - run: npx --yes @devcontainers/cli@latest build --workspace-folder . --config ${{ matrix.config }}
+

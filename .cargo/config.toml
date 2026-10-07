@@ -1,0 +1,8 @@
+# Workspace-level cargo configuration. The loom cfg is registered here and
+# mirrored in [workspace.lints.rust] unexpected_cfgs so `RUSTFLAGS="--cfg
+# loom"` stays warning-clean in the shared CI model-check job.
+[alias]
+xtask = "run -p xtask --"
+
+[build]
+# keep default target; cross-compilation presets live in scripts/

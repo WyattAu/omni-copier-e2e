@@ -1,0 +1,8 @@
+# rustup reads this file and pins the toolchain for everyone (host, CI,
+# devcontainer). MSRV is enforced separately via `rust-version` in
+# [workspace.package] plus the `msrv` CI job, so nightly tools (miri, fuzz)
+# remain available without editing this file.
+[toolchain]
+channel = "stable"
+components = ["rustfmt", "clippy", "rust-src"]
+profile = "minimal"

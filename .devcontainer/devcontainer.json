@@ -1,0 +1,29 @@
+{
+  // Image flavor: zero-setup. The nix flavor lives in .devcontainer/nix/.
+  "name": "OmniRust",
+  "image": "mcr.microsoft.com/devcontainers/rust:1-bookworm",
+  "features": {
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+  "postCreateCommand": "rustup component add rust-src && cargo install --locked cargo-nextest cargo-deny cargo-vet",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "rust-lang.rust-analyzer",
+        "tamasfe.even-better-toml",
+        "serayuzgur.crates",
+        "vadimcn.vscode-lldb",
+        "tekumara.typos-vscode",
+        "EditorConfig.EditorConfig",
+        "github.vscode-github-actions"
+      ],
+      "settings": {
+        "rust-analyzer.check.command": "clippy",
+        "rust-analyzer.cargo.allFeatures": true,
+        "rust-analyzer.rustc.source": "discover",
+        "editor.formatOnSave": true,
+        "[rust]": { "editor.defaultFormatter": "rust-lang.rust-analyzer" }
+      }
+    }
+  }
+}

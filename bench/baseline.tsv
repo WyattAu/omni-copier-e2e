@@ -1,0 +1,2 @@
+# Committed performance baseline. Regenerate deliberately with `make bench-update`; never hand-edited.
+parse valid id	75.850	ns	gate	7.612

@@ -1,0 +1,16 @@
+[package]
+name = "omni-cli"
+description = "Example CLI binary — clap + omni-core, shows the workspace binary pattern"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[dependencies]
+omni-core.workspace = true
+clap.workspace = true
+
+[lints]
+workspace = true
